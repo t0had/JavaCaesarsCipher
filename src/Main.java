@@ -1,33 +1,82 @@
+import java.util.Locale;
 import java.util.Scanner;
+import java.io.*;
 
 public class Main {
     public static void main(String[] args) {
-        //Осталось добавить:
-        //- работу с текстовыми файлами
-        //- обработку всех исключений, и все возможные проверки
         Scanner in = new Scanner(System.in);
         char[] output = {};
-        System.out.print("Введите значение сдвига элементов: "); int shift = in.nextInt();
-        System.out.print("Введите текст для шифрования: "); char[] input = in.next().toLowerCase().toCharArray();
-        while(true){
-            System.out.print("Какой метод вы хотите использовать?\n1 - Шифрование текста\n2 - Дешифрование текста\n3 - Поменять конфигурацию\n");
-            switch (in.nextInt()){
+        String pathInPutFile;
+        String pathOutPutFile;
+        String buffer = "";
+        int shift;
+
+        System.out.print("Введите путь к входному файлу: ");
+        try {
+            pathInPutFile = in.next();
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            return;
+        }
+
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(pathInPutFile))) {
+            String line = bufferedReader.readLine();
+            while(line != null) {
+                buffer = buffer + line + "\n";
+                line = bufferedReader.readLine();
+            }
+            buffer = buffer.toLowerCase();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            return;
+        }
+
+        System.out.print("Введите путь к выходному файлу: ");
+        try {
+            pathOutPutFile = in.next();
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            return;
+        }
+
+        System.out.print("Введите значение сдвига элементов: ");
+        try {
+            shift = in.nextInt();
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            return;
+        }
+
+        System.out.println("Выберите метод:\n1 - шифрование текста\n2 - дешифрование текста");
+        try{
+            switch(in.nextInt()) {
                 case 1:
-                    output = Encryption(input, shift);
-                    System.out.println(output);
+                    try (FileWriter fileWriter = new FileWriter(pathOutPutFile)) {
+                        fileWriter.write(Encryption(buffer.toCharArray(), shift));
+                    } catch (Exception ex) {
+                        System.out.println(ex.getMessage());
+                        return;
+                    }
+                    System.out.println("Шифрование завершено! Файл с шифрованным текстом находится в данном файле: " + pathOutPutFile);
                     break;
                 case 2:
-                    output = Decryption(output, shift);
-                    System.out.println(output);
-                    break;
-                case 3:
-                    System.out.print("Введите значение сдвига элементов: "); shift = in.nextInt();
-                    System.out.print("Введите текст для шифрования: "); input = in.next().toLowerCase().toCharArray();
+                    try (FileWriter fileWriter = new FileWriter(pathOutPutFile)) {
+                        fileWriter.write(Decryption(buffer.toCharArray(), shift));
+                    } catch (Exception ex) {
+                        System.out.println(ex.getMessage());
+                        return;
+                    }
+                    System.out.println("Дешифрование завершено! Файл с дешифрованным текстом находится в данном файле: " + pathOutPutFile);
                     break;
                 default:
-                    System.out.print("Нет метода под таким номером!\n");
-                    return;
+                    break;
             }
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
         }
     }
     public static char[] Encryption(char[] inPut, int shift){
@@ -43,15 +92,23 @@ public class Main {
                 'u', 'v', 'w', 'x', 'y', 'z'
         };
         for (int i = 0; i < outPut.length - 1; i++){
-            for(int r = 0; r < ruAlphabet.length - 1; r++){
+            for(int r = 0; r < ruAlphabet.length; r++){
                 if(outPut[i] == ruAlphabet[r]){
-                    outPut[i] = ruAlphabet[r + shift];
+                    int newPos = (r + shift) % ruAlphabet.length;
+                    if (newPos < 0){
+                        newPos += ruAlphabet.length;
+                    }
+                    outPut[i] = ruAlphabet[newPos];
                     break;
                 }
             }
-            for(int e = 0; e < enAlphabet.length - 1; e++){
+            for(int e = 0; e < enAlphabet.length; e++){
                 if(outPut[i] == enAlphabet[e]){
-                    outPut[i] = enAlphabet[e + shift];
+                    int newPos = (e + shift) % enAlphabet.length;
+                    if (newPos < 0){
+                        newPos += enAlphabet.length;
+                    }
+                    outPut[i] = enAlphabet[newPos];
                     break;
                 }
             }
@@ -70,16 +127,24 @@ public class Main {
                 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
                 'u', 'v', 'w', 'x', 'y', 'z'
         };
-        for (int i = 0; i < outPut.length - 1; i++){
-            for(int r = 0; r < ruAlphabet.length - 1; r++){
+        for (int i = 0; i < outPut.length; i++){
+            for(int r = 0; r < ruAlphabet.length; r++){
                 if(outPut[i] == ruAlphabet[r]){
-                    outPut[i] = ruAlphabet[r - shift];
+                    int newPos = (r - shift) % ruAlphabet.length;
+                    if (newPos < 0){
+                        newPos += ruAlphabet.length;
+                    }
+                    outPut[i] = ruAlphabet[newPos];
                     break;
                 }
             }
-            for(int e = 0; e < enAlphabet.length - 1; e++){
+            for(int e = 0; e < enAlphabet.length; e++){
                 if(outPut[i] == enAlphabet[e]){
-                    outPut[i] = enAlphabet[e - shift];
+                    int newPos = (e - shift) % enAlphabet.length;
+                    if (newPos < 0){
+                        newPos += enAlphabet.length;
+                    }
+                    outPut[i] = enAlphabet[newPos];
                     break;
                 }
             }
